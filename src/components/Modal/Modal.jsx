@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react';
+import { useEffect } from 'react';
 
 export const Modal = ({ img, textAlt, onClose }) => {
   const closeModalBackdrop = e => {
@@ -7,21 +7,17 @@ export const Modal = ({ img, textAlt, onClose }) => {
     }
   };
 
-  const handleClickEsc = useCallback(
-    e => {
+  useEffect(() => {
+    const handleClickEsc = e => {
       if (e.code === 'Escape') {
         onClose();
       }
-    },
-    [onClose]
-  );
-
-  useEffect(() => {
+    };
     document.addEventListener('keydown', handleClickEsc);
     return () => {
       document.removeEventListener('keydown', handleClickEsc);
     };
-  }, [handleClickEsc]);
+  }, [onClose]);
 
   return (
     <div className="Overlay" onClick={closeModalBackdrop}>
