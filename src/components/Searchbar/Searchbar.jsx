@@ -1,42 +1,36 @@
-import { Component } from 'react';
+import { useState } from 'react';
 
 import { CiSearch } from 'react-icons/ci';
 
-export class Searchbar extends Component {
-  state = {
-    searchText: '',
-  };
+export const Searchbar = ({ handleSearch }) => {
+  const [searchText, setSearchText] = useState('');
 
-  handleChange = evt => {
-    this.setState({ searchText: evt.target.value });
-  };
+  const handleChange = evt => setSearchText(evt.target.value);
 
-  handleSubmit = evt => {
+  const handleSubmit = evt => {
     evt.preventDefault();
-    this.props.handleSubmit(this.state.searchText);
+    handleSearch(searchText);
   };
 
-  render() {
-    return (
-      <header className="Searchbar">
-        <form className="SearchForm" onSubmit={this.handleSubmit}>
-          <button type="submit" className="SearchForm-button">
-            <span className="SearchForm-button-label">Search</span>
-            <CiSearch size="32px" />
-          </button>
-          <input
-            onChange={this.handleChange}
-            className="SearchForm-input"
-            name="search"
-            type="text"
-            required
-            autoComplete="off"
-            autoFocus
-            placeholder="Search images and photos"
-            value={this.state.searchText}
-          />
-        </form>
-      </header>
-    );
-  }
-}
+  return (
+    <header className="Searchbar">
+      <form className="SearchForm" onSubmit={handleSubmit}>
+        <button type="submit" className="SearchForm-button">
+          <span className="SearchForm-button-label">Search</span>
+          <CiSearch size="32px" />
+        </button>
+        <input
+          onChange={handleChange}
+          className="SearchForm-input"
+          name="search"
+          type="text"
+          required
+          autoComplete="off"
+          autoFocus
+          placeholder="Search images and photos"
+          value={searchText}
+        />
+      </form>
+    </header>
+  );
+};

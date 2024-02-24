@@ -1,30 +1,31 @@
-import { Component } from 'react';
+import { useCallback, useEffect } from 'react';
 
-export class Modal extends Component {
-  closeModalBackdrop = e => {
+export const Modal = ({ img, textAlt, onClose }) => {
+  const closeModalBackdrop = e => {
     if (e.target === e.currentTarget) {
-      this.props.onClose();
-    }
-  };
-  handleClickEsc = e => {
-    if (e.code === 'Escape') {
-      this.props.onClose();
+      onClose();
     }
   };
 
-  componentDidMount() {
-    document.addEventListener('keydown', this.handleClickEsc);
-  }
+  const handleClickEsc = useCallback(
+    e => {
+      if (e.code === 'Escape') {
+        onClose();
+      }
+    },
+    [onClose]
+  );
 
-  componentWillUnmount() {
-    document.removeEventListener('keydown', this.handleClickEsc);
-  }
+  useEffect(() => {
+    document.addEventListener('keydown', handleClickEsc);
+    return () => {
+      document.removeEventListener('keydown', handleClickEsc);
+    };
+  }, [handleClickEsc]);
 
-  render() {
-    return (
-      <div className="Overlay" onClick={this.closeModalBackdrop}>
-        <img src={this.props.img} alt={this.props.text} width={'80%'} />
-      </div>
-    );
-  }
-}
+  return (
+    <div className="Overlay" onClick={closeModalBackdrop}>
+      <img src={img} alt={textAlt} width={'80%'} />
+    </div>
+  );
+};

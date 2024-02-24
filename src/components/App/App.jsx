@@ -1,111 +1,97 @@
-import { Component } from 'react';
+import { useEffect, useState } from 'react';
 import * as Pixabay from 'api/pixabay';
 import { Button, ImageGallery, Loader, Modal, Searchbar } from 'components';
 
-export class App extends Component {
-  state = {
-    searchText: '',
-    page: 1,
-    photos: [],
-    showBtn: false,
-    isEmpty: false,
-    isLoading: false,
-    isShowModal: false,
-    modalImg: '',
-    textAlt: '',
-    error: '',
+export const App = () => {
+  const [searchText, setSerchText] = useState('');
+  const [page, setPage] = useState(1);
+  const [photos, setPhotos] = useState([]);
+  const [showBtn, setShowBtn] = useState(false);
+  const [isEmpty, setIsEmpty] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isShowModal, setIsShowModal] = useState(false);
+  const [modalImg, setModalImg] = useState('');
+  const [textAlt, setTextAlt] = useState('');
+  const [error, setError] = useState('');
+
+  const reset = () => {
+    setSerchText('');
+    setPage(1);
+    setPhotos([]);
+    setShowBtn(false);
+    setIsEmpty(false);
+    setIsLoading(false);
+    setIsShowModal(false);
+    setModalImg('');
+    setTextAlt('');
+    setError('');
   };
 
-  componentDidUpdate(_, prevState) {
-    const { searchText, page } = this.state;
-    if (searchText !== prevState.searchText || page !== prevState.page) {
-      this.setState({ isLoading: true });
-      Pixabay.getPhotos(searchText, page)
-        .then(({ hits, totalHits }) => {
-          if (Array.isArray(hits) && !hits.length) {
-            this.setState({ isEmpty: true });
-            return;
-          }
-          this.setState(prevState => ({
-            photos: [...prevState.photos, ...hits],
-            showBtn: page < Math.ceil(totalHits / 15),
-          }));
-        })
-        .catch(error => {
-          console.log(error);
-          this.setState({ error: error.message });
-        })
-        .finally(() => {
-          this.setState({ isLoading: false });
-        });
+  useEffect(() => {
+    if (!searchText) {
+      return;
     }
-  }
+    setIsLoading(true);
+    Pixabay.getPhotos(searchText, page)
+      .then(({ hits, totalHits }) => {
+        if (Array.isArray(hits) && !hits.length) {
+          setIsEmpty(true);
+          return;
+        }
+        setPhotos(prev => (prev ? [...prev, ...hits] : hits));
+        setShowBtn(() => page < Math.ceil(totalHits / 15));
+      })
+      .catch(error => {
+        setError(error.message);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  }, [searchText, page]);
 
-  handleSubmit = searchText => {
-    this.setState({
-      searchText,
-      page: 1,
-      photos: [],
-      showBtn: false,
-      isEmpty: false,
-      isShowModal: false,
-      modalImg: '',
-      textAlt: '',
-    });
+  const handleSearch = text => {
+    if (text === searchText) {
+      return;
+    }
+    reset();
+    setSerchText(text);
   };
 
-  handleLoadMore = () => {
-    this.setState(prevState => ({ page: prevState.page + 1 }));
+  const handleLoadMore = () => setPage(prev => prev + 1);
+
+  const handleOpenModal = ({ modalImg, textAlt }) => {
+    setIsShowModal(true);
+    setModalImg(modalImg);
+    setTextAlt(textAlt);
   };
 
-  handleOpenModal = ({ modalImg, textAlt }) => {
-    this.setState({ isShowModal: true, modalImg, textAlt });
+  const handleCloseModal = () => {
+    setIsShowModal(false);
+    setModalImg('');
+    setTextAlt('');
   };
 
-  handleCloseModal = () => {
-    this.setState({ isShowModal: false, modalImg: '', textAlt: '' });
-  };
+  return (
+    <div className="App">
+      <Searchbar handleSearch={handleSearch} />
+      {photos.length > 0 && (
+        <ImageGallery photos={photos} onOpenModal={handleOpenModal} />
+      )}
+      {showBtn && <Button onClick={handleLoadMore}>Load more ...</Button>}
+      {!searchText && <p className="error">Search to find some images</p>}
+      {isEmpty && <p className="error">Sorry. There are no images ... 😭</p>}
+      {error && (
+        <p className="error">
+          Oops, something went wrong 😱
+          <br />
+          {error}
+        </p>
+      )}
+      {isLoading && <Loader />}
 
-  render() {
-    const {
-      searchText,
-      photos,
-      showBtn,
-      isEmpty,
-      isLoading,
-      isShowModal,
-      modalImg,
-      textAlt,
-      error,
-    } = this.state;
-    return (
-      <div className="App">
-        <Searchbar handleSubmit={this.handleSubmit} />
-        {photos.length > 0 && (
-          <ImageGallery photos={photos} onOpenModal={this.handleOpenModal} />
-        )}
-        {showBtn && (
-          <Button onClick={this.handleLoadMore}>Load more ...</Button>
-        )}
-        {!searchText && <p className="error">Search to find some images</p>}
-        {isEmpty && <p className="error">Sorry. There are no images ... 😭</p>}
-        {error && (
-          <p className="error">
-            Oops, something went wrong 😱
-            <br />
-            {error}
-          </p>
-        )}
-        {isLoading && <Loader />}
-
-        {isShowModal && (
-          <Modal
-            img={modalImg}
-            textAlt={textAlt}
-            onClose={this.handleCloseModal}
-          />
-        )}
-      </div>
-    );
-  }
-}
+      {isShowModal && (
+        <Modal img={modalImg} textAlt={textAlt} onClose={handleCloseModal} />
+      )}
+    </div>
+  );
+};
